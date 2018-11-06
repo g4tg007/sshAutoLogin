@@ -1,11 +1,7 @@
 #!/bin/bash
-# Author   :    AlicFeng
-# Email    :    a@samego.com
-# Github   :    https://github.com/alicfeng/sshAutoLogin
-
 
 server_list=()
-SSH_INTELLIGENCE_AUTO_LOGIN_CONFIGURE_DIR=~/.ssha	
+SSH_INTELLIGENCE_AUTO_LOGIN_CONFIGURE_DIR=.ssha
 # load include server list configure
 if [ $SSH_INTELLIGENCE_AUTO_LOGIN_CONFIGURE_DIR ]; then
 	# Determine whether the configuration folder exists
@@ -16,6 +12,7 @@ if [ $SSH_INTELLIGENCE_AUTO_LOGIN_CONFIGURE_DIR ]; then
     				while read line_configure;do
                         eval $line_configure
 					done < $config_file
+                    #server_list[${Index}]="${Index} ${Name} ${Host} ${Port} ${User} ${PasswordOrKey}"
                     server_list[${#server_list[*]}]="${Index} ${Name} ${Host} ${Port} ${User} ${PasswordOrKey}"
 			else
 				echo "file not rule" && exit 1
@@ -33,13 +30,14 @@ server_list_length=${#server_list[*]}
 
 # list server
 function list() {
-    echo -e "Index\tDescription\t\tPort\tHost\t\tUsername\tPassword|SecretKeyFile"
+    echo -e "ID\tIndex\tDescription\t\tPort\tHost\t\tUser\tPassword|SecretKeyFile"
+    echo ${server_list_length}
     for ((i=0;i<${server_list_length};i++));do
         servers=(${server_list[$i]})
         serverIndex=$(($i+1))
-        echo -e "${servers[0]}\t${servers[1]}\t\t${servers[2]}\t${servers[3]}\t${servers[4]}\t${servers[5]}\t"| toilet -f term -F border -t --gay
+        echo -e "$i\t${servers[0]}\t${servers[1]}\t\t${servers[2]}\t${servers[3]}\t${servers[4]}\t********\t"
+        #密码脱敏
     done
-    exit 0
 }
 
 function usage() {
@@ -49,8 +47,13 @@ function usage() {
 }
 
 function login(){
+    # echo $1
+    # echo $0
+    # echo $server_list
     server=(${server_list[$1]})
-    echo "$USER logging into the【${server[1]}】 server"| toilet -f term -F border --gay
+    # echo ${server_list[$1]} 
+    # echo $1
+    echo "$USER logging into the【${server[1]}】 server"
 
 	command="
         expect {
@@ -74,18 +77,24 @@ function login(){
 		${command}
 	"
    fi
-    echo -e "\t$USER logged out the【${server[1]}】 server\t" | toilet -f term -F border --gay
+    echo -e "\t$USER logged out the【${server[1]}】 server\t" 
 }
 # clear screen
 clear
-while getopts hls: ARGS  
+while getopts hls ARGS  
 do  
 case $ARGS in   
     s)
-        login $OPTARG
+        list
+        echo '输入想要链接会话的ID：'
+        read id
+        echo '系好安全带，准备出发，目标：'$id
+        login $id
+        #echo $OPTARG
         ;;
     l)
         list
+        exit 0
         ;;
     h)  
         usage
@@ -95,18 +104,3 @@ case $ARGS in
         ;;
 esac
 done
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
